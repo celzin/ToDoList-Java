@@ -1,5 +1,7 @@
 package br.com.cefet.celso.todolist.user;
 
+import at.favre.lib.crypto.bcrypt.BCrypt;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,12 +26,16 @@ public class UserController {
     @PostMapping("/")
     public ResponseEntity create(@RequestBody UserModel userModel) {
         var user = this.userRepository.findByUsername(userModel.getUsername());
-        
+
         if (user != null) {
             // Mensagem de erro
             // Status code
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Usuario ja existente");
         }
+
+        var passwordHashed = BCrypt.withDefaults().hashToString(12, userModel.getPassword().toCharArray());
+
+        userModel.setPassword(passwordHashed);
 
         var userCreated = this.userRepository.save(userModel);
         return ResponseEntity.status(HttpStatus.CREATED).body(userCreated);
